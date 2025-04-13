@@ -1,5 +1,6 @@
 # Ignorar entorno virtual
 venv/
+venv311/
 
 # Archivos temporales de Python
 __pycache__/
