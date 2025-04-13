@@ -1,1 +1,27 @@
-/entorno
+# Ignorar entorno virtual
+venv/
+
+# Archivos temporales de Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Datos médicos pesados y formatos intermedios
+*.nii
+*.nii.gz
+*.npy
+*.npz
+*.pt
+*.h5
+*.ckpt
+*.csv
+*.json
+*.pkl
+
+# Archivos de sistema
+.DS_Store
+Thumbs.db
+
+# Archivos de configuración personales
+.env
