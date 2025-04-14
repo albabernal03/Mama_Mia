@@ -26,3 +26,6 @@ Thumbs.db
 
 # Archivos de configuración personales
 .env
+
+#Archivo conflictivo (excede el límite de subida de archivos)
+datos/nnUNet_pretrained_weights/
