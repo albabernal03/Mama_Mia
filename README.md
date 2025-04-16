@@ -107,7 +107,7 @@ El reto se ejecuta en [**Codabench**](https://codabench.org), donde:
 
 - Nombre: Alba Bernal Rodríguez
 - Email: albabero@myuax.com
-- GitHub: albabr08
+- GitHub: [albabernal03](https://github.com/albabernal03)
 
 ---
 
