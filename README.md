@@ -61,7 +61,6 @@ El dataset incluye:
 2. Localización del tumor en la primera imagen post-contraste.
 3. Segmentación 3D con Mango Viewer.
 
-![Protocolo de anotación](./images/annotation_protocol.png)
 
 ---
 
