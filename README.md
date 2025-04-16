@@ -52,7 +52,8 @@ El dataset incluye:
 
 16 radiólogos de 8 países participaron en la anotación de más de 1000 estudios.
 
-![Anotadores](./images/radiologists.png)
+![image](https://github.com/user-attachments/assets/11105224-3747-4974-b12d-8203fa7d4821)
+
 
 **Protocolo de anotación en 3 pasos:**
 
