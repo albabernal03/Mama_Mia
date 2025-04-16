@@ -2,7 +2,8 @@
 
 Participación en el reto **MAMA-MIA**: *Advancing Generalizability and Fairness in Breast MRI Tumour Segmentation and Treatment Response Prediction*, organizado por la Universitat de Barcelona dentro del congreso MICCAI 2025.
 
-![Logo del reto](https://www.ub.edu/mama-mia/wp-content/uploads/2024/12/logo-2.png)
+![Logo reto](https://github.com/user-attachments/assets/97013f7f-34de-44e4-8cd7-5c350b47b282)
+
 
 ---
 
