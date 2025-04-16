@@ -41,7 +41,8 @@ El dataset incluye:
 - **49 variables clínicas, demográficas y de imagen** armonizadas.
 - **Pesos preentrenados de nnU-Net** para facilitar el desarrollo de modelos.
 
-![Descripción del dataset](./images/mamamia-dataset-summary.png)
+![Contenido Dataset](https://github.com/user-attachments/assets/178572c6-501b-4db1-bf39-2e61f9420d92)
+
 
 > Fuente: Garrucho et al. (2025) [DOI: 10.1038/s41597-025-04707-4](https://doi.org/10.1038/s41597-025-04707-4)
 
