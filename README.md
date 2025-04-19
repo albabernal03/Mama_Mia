@@ -93,7 +93,7 @@ El reto se ejecuta en [**Codabench**](https://codabench.org), donde:
 - 📄 Paper del dataset: [DOI: 10.1038/s41597-025-04707-4](https://doi.org/10.1038/s41597-025-04707-4)
 - 📦 Dataset en Synapse: [syn60868042](https://www.synapse.org/Synapse:syn60868042)
 - 🧪 Codabench (plataforma de envío): [https://codabench.org](https://codabench.org)
-- ⏱️ Link para inscripción y deadlines: [https://www.codabench.org/competitions/7425/]
+- ⏱️ Link para inscripción y deadlines: [https://www.codabench.org/competitions/7425/](https://www.codabench.org/competitions/7425/)
 
 
 ---
