@@ -3,7 +3,7 @@
 MAMA-MIA Challenge - Modelo Base con Preprocesamiento Óptimo
 Basado en Schwarzhans et al. (2025): Bias Field + Spatial + Z-score normalization
 
-Autor: Alba 
+Autor: Alba & Claude
 Fecha: Mayo 2025
 """
 
@@ -60,15 +60,14 @@ class MAMAMIAPreprocessor:
         Returns:
             Imagen corregida
         """
-        # Crear máscara de tejido (voxeles > 0)
-        mask = sitk.BinaryThreshold(image_sitk, lowerThreshold=1)
-        
-        # Aplicar N4 Bias Field Correction
-        corrector = sitk.N4BiasFieldCorrectionImageFilter()
-        corrector.SetMaskImage(mask)
-        corrected_image = corrector.Execute(image_sitk)
-        
-        return corrected_image
+        try:
+            # Método simple sin máscara
+            corrector = sitk.N4BiasFieldCorrectionImageFilter()
+            corrected_image = corrector.Execute(image_sitk)
+            return corrected_image
+        except Exception as e:
+            print(f"  ⚠️  N4 falló, usando imagen original: {e}")
+            return image_sitk
     
     def spatial_normalization(self, image_sitk: sitk.Image, 
                             target_spacing: Tuple[float, float, float] = (1.0, 1.0, 1.0),
@@ -193,12 +192,27 @@ class MAMAMIAPreprocessor:
         patients = set()
         
         # Buscar archivos _0000 y _0001
-        for file in self.images_dir.glob("*_0000.nii.gz"):
-            patient_id = file.stem.replace("_0000", "")
+        files_0000 = list(self.images_dir.glob("*_0000.nii.gz"))
+        files_0001 = list(self.images_dir.glob("*_0001.nii.gz"))
+        
+        print(f"🔍 Debug: Archivos _0000 encontrados: {len(files_0000)}")
+        print(f"🔍 Debug: Archivos _0001 encontrados: {len(files_0001)}")
+        
+        for file in files_0000:
+            # CORRECCIÓN: Quitar solo "_0000.nii.gz" del nombre completo
+            patient_id = file.name.replace("_0000.nii.gz", "")
             post_file = self.images_dir / f"{patient_id}_0001.nii.gz"
+            
+            if len(patients) < 3:  # Solo debug para primeros 3
+                print(f"🔍 Buscando par para {patient_id}:")
+                print(f"   Pre: {file.name} ✅")
+                print(f"   Post: {post_file.name} {'✅' if post_file.exists() else '❌'}")
             
             if post_file.exists():
                 patients.add(patient_id)
+                
+        print(f"🔍 Debug: Total pacientes emparejados: {len(patients)}")
+        print(f"🔍 Debug: Primeros 5 pacientes: {sorted(list(patients))[:5]}")
         
         return sorted(list(patients))
     
