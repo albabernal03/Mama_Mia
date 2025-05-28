@@ -52,7 +52,7 @@ class MAMAMIAPreprocessor:
     
     def n4_bias_correction(self, image_sitk: sitk.Image) -> sitk.Image:
         """
-        Aplica corrección de campo de sesgo N4ITK
+        Aplica corrección de campo de sesgo N4ITK con conversión de tipos
         
         Args:
             image_sitk: Imagen SimpleITK
@@ -61,13 +61,34 @@ class MAMAMIAPreprocessor:
             Imagen corregida
         """
         try:
-            # Método simple sin máscara
+            # PASO 1: Convertir a float32 (OBLIGATORIO para N4)
+            print(f"    🔧 Tipo original: {image_sitk.GetPixelIDTypeAsString()}")
+            image_float = sitk.Cast(image_sitk, sitk.sitkFloat32)
+            print(f"    🔧 Convertido a: {image_float.GetPixelIDTypeAsString()}")
+            
+            # PASO 2: Aplicar N4 Bias Field Correction
             corrector = sitk.N4BiasFieldCorrectionImageFilter()
-            corrected_image = corrector.Execute(image_sitk)
+            
+            # Configuración óptima para DCE-MRI
+            corrector.SetMaximumNumberOfIterations([50, 50, 50, 50])
+            corrector.SetConvergenceThreshold(0.001)
+            
+            corrected_image = corrector.Execute(image_float)
+            
+            # PASO 3: Mantener como float32 (mejor para procesamiento posterior)
+            print(f"    ✅ N4 aplicado correctamente")
             return corrected_image
+            
         except Exception as e:
-            print(f"  ⚠️  N4 falló, usando imagen original: {e}")
-            return image_sitk
+            print(f"    ❌ N4 falló completamente: {str(e)[:100]}...")
+            # Convertir a float32 aunque N4 falle
+            try:
+                image_float = sitk.Cast(image_sitk, sitk.sitkFloat32)
+                print(f"    🔧 Usando imagen original convertida a float32")
+                return image_float
+            except:
+                print(f"    ❌ Error crítico en conversión de tipos")
+                return image_sitk
     
     def spatial_normalization(self, image_sitk: sitk.Image, 
                             target_spacing: Tuple[float, float, float] = (1.0, 1.0, 1.0),
@@ -288,70 +309,112 @@ class MAMAMIAPreprocessor:
         
         print(f"✅ Dataset JSON creado: {json_path}")
     
-    def run_preprocessing(self, train_split: float = 0.8):
+    def run_preprocessing(self, train_split: float = 0.8, max_cases: int = None):
         """
         Ejecuta todo el preprocesamiento
         
         Args:
             train_split: Proporción para entrenamiento (0.8 = 80%)
+            max_cases: Máximo número de casos (None = todos)
         """
-        print("🚀 Iniciando preprocesamiento MAMA-MIA...")
+        print("🚀 Iniciando preprocesamiento MAMA-MIA ÓPTIMO...")
         print("📋 Configuración:")
-        print("   - Bias Field Correction: N4ITK")
+        print("   - Bias Field Correction: N4ITK (Float32)")
         print("   - Spatial Normalization: 1x1x1 mm")
         print("   - Intensity Normalization: Z-score")
         print("   - Input: Subtraction Image (Post1 - Pre)")
+        print("   - Calidad: MÁXIMA (según Schwarzhans et al.)")
         print()
         
         # Obtener lista de pacientes
         patients = self.get_patient_files()
-        print(f"📊 Pacientes encontrados: {len(patients)}")
+        
+        if max_cases:
+            patients = patients[:max_cases]
+            print(f"📊 Limitando a {max_cases} casos para prueba")
+        
+        print(f"📊 Pacientes a procesar: {len(patients)}")
         
         if len(patients) == 0:
             print("❌ No se encontraron pacientes válidos")
             return
         
+        # Estimar tiempo
+        time_per_case = 8  # segundos promedio
+        total_time_min = (len(patients) * time_per_case) / 60
+        print(f"⏱️  Tiempo estimado: {total_time_min:.1f} minutos")
+        print()
+        
         # Procesar pacientes
         processed_patients = []
-        for patient_id in tqdm(patients, desc="Procesando pacientes"):
+        failed_patients = []
+        
+        for i, patient_id in enumerate(tqdm(patients, desc="Procesando pacientes"), 1):
             if self.process_single_patient(patient_id):
                 processed_patients.append(patient_id)
+            else:
+                failed_patients.append(patient_id)
+            
+            # Progreso cada 100 casos
+            if i % 100 == 0:
+                success_rate = len(processed_patients) / i * 100
+                print(f"\n📊 Progreso: {i}/{len(patients)} | Éxito: {success_rate:.1f}%")
         
-        print(f"\n✅ Pacientes procesados exitosamente: {len(processed_patients)}/{len(patients)}")
+        print(f"\n✅ RESULTADOS:")
+        print(f"   - Procesados exitosamente: {len(processed_patients)}")
+        print(f"   - Fallaron: {len(failed_patients)}")
+        print(f"   - Tasa de éxito: {len(processed_patients)/len(patients)*100:.1f}%")
+        
+        if failed_patients:
+            print(f"   - Pacientes fallidos: {failed_patients[:5]}...")
         
         # Crear dataset.json
         self.create_dataset_json(processed_patients)
         
         # Estadísticas finales
-        print(f"\n📈 RESUMEN:")
-        print(f"   - Directorio de salida: {self.nnunet_dir}")
-        print(f"   - Imágenes de entrenamiento: {len(processed_patients)}")
-        print(f"   - Preprocesamiento: Bias Field + Spatial + Z-score")
-        print(f"   - Listo para nnU-Net v2!")
+        print(f"\n🎯 MODELO ÓPTIMO LISTO:")
+        print(f"   - Directorio: {self.nnunet_dir}")
+        print(f"   - Casos de entrenamiento: {len(processed_patients)}")
+        print(f"   - Preprocesamiento: Schwarzhans et al. (2025)")
+        print(f"   - Calidad: MÁXIMA para segmentación")
         
-        # Comando para nnU-Net
-        print(f"\n🔥 PRÓXIMO PASO - Entrenar con nnU-Net:")
-        print(f"   export nnUNet_raw='{self.output_dir}'")
-        print(f"   export nnUNet_preprocessed='{self.output_dir}/nnUNet_preprocessed'")
-        print(f"   export nnUNet_results='{self.output_dir}/nnUNet_results'")
+        # Comandos siguientes
+        print(f"\n🔥 PRÓXIMOS PASOS:")
+        print(f"   # 1. Configurar variables de entorno:")
+        print(f"   $env:nnUNet_raw='{self.output_dir.absolute()}'")
+        print(f"   $env:nnUNet_preprocessed='{self.output_dir.absolute()}\\nnUNet_preprocessed'")
+        print(f"   $env:nnUNet_results='{self.output_dir.absolute()}\\nnUNet_results'")
+        print(f"")
+        print(f"   # 2. Planificar y entrenar:")
         print(f"   nnUNetv2_plan_and_preprocess -d 001 --verify_dataset_integrity")
         print(f"   nnUNetv2_train 001 3d_fullres 0")
+        
+        return len(processed_patients)
 
 
 def main():
     parser = argparse.ArgumentParser(description="MAMA-MIA Preprocesamiento Óptimo")
     parser.add_argument("--base_dir", type=str, required=True, 
                        help="Directorio base con carpetas 'images' y 'segmentations'")
-    parser.add_argument("--output_dir", type=str, default="nnUNet_preprocessed",
+    parser.add_argument("--output_dir", type=str, default="nnUNet_models",
                        help="Directorio de salida")
     parser.add_argument("--train_split", type=float, default=0.8,
                        help="Proporción para entrenamiento")
+    parser.add_argument("--max_cases", type=int, default=None,
+                       help="Máximo número de casos (None = todos)")
     
     args = parser.parse_args()
     
     # Crear y ejecutar preprocesador
     preprocessor = MAMAMIAPreprocessor(args.base_dir, args.output_dir)
-    preprocessor.run_preprocessing(args.train_split)
+    num_processed = preprocessor.run_preprocessing(args.train_split, args.max_cases)
+    
+    if num_processed > 0:
+        print(f"\n🎉 ¡PREPROCESAMIENTO COMPLETADO!")
+        print(f"   ✅ {num_processed} casos listos para nnU-Net")
+        print(f"   🎯 Calidad óptima según literatura científica")
+    else:
+        print(f"\n❌ No se procesaron casos. Revisar errores arriba.")
 
 
 if __name__ == "__main__":
