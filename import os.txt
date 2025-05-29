@@ -1,0 +1,79 @@
+import os
+import csv
+import slicer
+import numpy as np
+
+# Rutas actualizadas
+base_dir = "C:/Users/FX507/Documents/GitHub/Mama_Mia/datos"
+img_dir = os.path.join(base_dir, "images")
+auto_dir = os.path.join(base_dir, "segmentations", "automatic")
+exp_dir = os.path.join(base_dir, "segmentations", "expert")
+output_csv = os.path.join(base_dir, "resultados_completos.csv")
+
+def dice_coefficient(label1, label2):
+    array1 = slicer.util.arrayFromLabelVolume(label1)
+    array2 = slicer.util.arrayFromLabelVolume(label2)
+    intersection = np.logical_and(array1, array2).sum()
+    return 2.0 * intersection / (array1.sum() + array2.sum()) if (array1.sum() + array2.sum()) > 0 else 0.0
+
+def compute_volume_and_stats(label_node, ref_volume_node):
+    mask_array = slicer.util.arrayFromLabelVolume(label_node)
+    image_array = slicer.util.arrayFromVolume(ref_volume_node)
+    mask = mask_array > 0
+    intensities = image_array[mask]
+
+    # Calcular spacing
+    spacing = ref_volume_node.GetSpacing()
+    voxel_volume_mm3 = spacing[0] * spacing[1] * spacing[2]
+    voxel_volume_cm3 = voxel_volume_mm3 / 1000.0
+    volume_cm3 = np.sum(mask) * voxel_volume_cm3
+
+    mean_intensity = np.mean(intensities) if intensities.size > 0 else 0.0
+    std_intensity = np.std(intensities) if intensities.size > 0 else 0.0
+
+    return mask.sum(), round(volume_cm3, 3), round(mean_intensity, 2), round(std_intensity, 2)
+
+# Detectar pacientes por nombre de archivo
+pacientes = [f.replace(".nii.gz", "") for f in os.listdir(img_dir) if f.endswith(".nii.gz")]
+
+with open(output_csv, "w", newline="") as f:
+    writer = csv.writer(f)
+    writer.writerow([
+        "Paciente", "Dice",
+        "Vox_Auto", "Vol_Auto_cm3", "Int_Media_Auto", "Int_Std_Auto",
+        "Vox_Expert", "Vol_Expert_cm3", "Int_Media_Expert", "Int_Std_Expert"
+    ])
+
+    for paciente in pacientes:
+        print(f"Procesando {paciente}...")
+
+        img_path = os.path.join(img_dir, f"{paciente}.nii.gz")
+        auto_path = os.path.join(auto_dir, f"{paciente}.nii.gz")
+        exp_path = os.path.join(exp_dir, f"{paciente}.nii.gz")
+
+        if not all(os.path.exists(p) for p in [img_path, auto_path, exp_path]):
+            print(f"❌ Archivos faltantes para {paciente}, saltando...")
+            continue
+
+        # Cargar imagen base
+        ref_volume_node = slicer.util.loadVolume(img_path)
+
+        # Cargar segmentaciones como labelmaps
+        auto_node = slicer.util.loadLabelVolume(auto_path)
+        exp_node = slicer.util.loadLabelVolume(exp_path)
+
+        # Dice
+        dice = dice_coefficient(auto_node, exp_node)
+
+        # Métricas de cada segmentación
+        vox_auto, vol_auto, mean_auto, std_auto = compute_volume_and_stats(auto_node, ref_volume_node)
+        vox_exp, vol_exp, mean_exp, std_exp = compute_volume_and_stats(exp_node, ref_volume_node)
+
+        writer.writerow([
+            paciente, round(dice, 4),
+            vox_auto, vol_auto, mean_auto, std_auto,
+            vox_exp, vol_exp, mean_exp, std_exp
+        ])
+        print(f"✓ {paciente}: Dice={round(dice,4)} Vol_Auto={vol_auto}cm³ Vol_Expert={vol_exp}cm³")
+
+print("✅ Análisis completo guardado en:", output_csv)
