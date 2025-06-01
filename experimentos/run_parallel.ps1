@@ -24,11 +24,6 @@ Start-Job -Name "A3_MultiChannel" -ScriptBlock {
     python experiment_a3.py --base_dir $using:BASE_DIR --num_cases $using:NUM_CASES
 }
 
-Write-Host "Lanzando B1 Optimal..." -ForegroundColor Yellow
-Start-Job -Name "B1_Optimal" -ScriptBlock {
-    Set-Location $using:PWD
-    python experiment_b1.py --base_dir $using:BASE_DIR --num_cases $using:NUM_CASES
-}
 
 Write-Host "Lanzando A4 Temporal..." -ForegroundColor Yellow
 Start-Job -Name "A4_Temporal" -ScriptBlock {
