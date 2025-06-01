@@ -19,6 +19,8 @@ __pycache__/
 *.json
 *.pkl
 *.pth
+*.b2nd
+
 
 
 # Archivos de sistema
