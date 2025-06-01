@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 EXPERIMENTO A1: BASELINE - Subtraction Only (Post1 - Pre)
-Solo Z-score normalization, imagen de resta
+VERSIÓN CORREGIDA - Sin rutas hardcodeadas
 """
 
 import numpy as np
@@ -9,6 +9,7 @@ import SimpleITK as sitk
 from pathlib import Path
 import json
 import shutil
+import sys
 
 def create_experiment_A1(base_dir, output_dir="Dataset101_A1_Baseline", num_cases=None):
     """
@@ -30,17 +31,25 @@ def create_experiment_A1(base_dir, output_dir="Dataset101_A1_Baseline", num_case
     if num_cases:
         files_0000 = files_0000[:num_cases]
     
+    print(f"Encontrados {len(files_0000)} archivos _0000 para procesar")
+    
     processed = 0
-    for file in files_0000:
+    for i, file in enumerate(files_0000):
         patient_id = file.name.replace("_0000.nii.gz", "")
         post_file = images_dir / f"{patient_id}_0001.nii.gz"
         seg_file = seg_dir / f"{patient_id}.nii.gz"
         
-        if not post_file.exists() or not seg_file.exists():
+        if not post_file.exists():
+            print(f"Saltando {patient_id}: falta post-contraste")
+            continue
+            
+        if not seg_file.exists():
+            print(f"Saltando {patient_id}: falta segmentación")
             continue
             
         try:
-            print(f"Procesando A1: {patient_id} ({processed+1})")
+            if (i + 1) % 100 == 0:
+                print(f"Procesando A1: {patient_id} ({i+1}/{len(files_0000)})")
             
             # Cargar imágenes
             pre_sitk = sitk.Cast(sitk.ReadImage(str(file)), sitk.sitkFloat32)
@@ -95,6 +104,10 @@ if __name__ == "__main__":
     parser.add_argument("--num_cases", type=int, default=None)
     args = parser.parse_args()
     
-    create_experiment_A1(args.base_dir, num_cases=args.num_cases)
-    print("LISTO PARA: nnUNetv2_plan_and_preprocess -d 101")
-    print("ENTRENAR: nnUNetv2_train 101 3d_fullres 0")
+    result = create_experiment_A1(args.base_dir, num_cases=args.num_cases)
+    
+    if result > 0:
+        print("LISTO PARA: nnUNetv2_plan_and_preprocess -d 101")
+        print("ENTRENAR: nnUNetv2_train 101 3d_fullres 0")
+    else:
+        print("ERROR: No se procesaron casos")
