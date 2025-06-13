@@ -1,0 +1,9 @@
+CROPPING ANALYSIS SUMMARY REPORT
+==================================================
+
+TUMOR COVERAGE:
+  Mean tumor retention: 1.000 ± 0.000
+  Tumor retention: 100.0%
+
+Analysis completed successfully!
+Results saved in: C:\Users\usuario\Documents\Mama_Mia\analisis\analysis_results
