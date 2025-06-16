@@ -18,18 +18,43 @@ El objetivo es desarrollar soluciones de IA precisas y equitativas, evaluadas ta
 
 ---
 
-## 📆 Fechas clave
+## 📁 Estructura del repositorio
 
-| Evento | Fecha |
-|--------|-------|
-| 📁 Dataset disponible | Ya publicado (marzo 2025) |
-| 🧪 Fase de Sanity Check | 16 de abril de 2025 |
-| 📉 Fase de Validación | 15 de mayo de 2025 |
-| 📝 Envío del Paper (opcional) | 25 de junio de 2025 |
-| 🔬 Fase de Test final | 15 de julio de 2025 |
-| 🧾 Último día de envío | 31 de julio de 2025 |
-| 🎤 MICCAI 2025 Workshop | 23-27 de septiembre de 2025 |
-| 🏆 Anuncio de ganadores | Deep-Breath Workshop |
+Este repositorio contiene todos los archivos desarrollados durante la participación en el reto **MAMA-MIA Challenge 2025**: *Advancing Generalizability and Fairness in Breast MRI Tumour Segmentation and Treatment Response Prediction*, organizado por la Universitat de Barcelona en el marco de MICCAI 2025.
+
+A continuación se detalla el contenido de cada carpeta:
+
+### 📊 EDA/
+Contiene el análisis exploratorio de datos.
+- `EDA.ipynb`: análisis general de las variables clínicas y de respuesta.
+- `EDA_imagenes/`: análisis detallado de las imágenes DCE-MRI y segmentaciones tumorales.
+
+### 🧠 Modelos_Segmentación/
+Implementación de los modelos de segmentación de tumores primarios, incluyendo configuraciones y scripts para su entrenamiento con nnU-Net v2.
+
+### 🔬 Modelos_pcr/
+Modelos de predicción de respuesta patológica completa (pCR), incluyendo enfoques clásicos (radiomics) y deep learning, con distintas entradas (imagen completa vs. recortes centrados).
+
+### 📂 datos/
+Archivos auxiliares usados en los experimentos (splits de entrenamiento, anotaciones, coordenadas, etc.).
+
+> ⚠️ **Importante:** Las imágenes DCE-MRI no están incluidas por su gran tamaño. Deben descargarse desde el sitio oficial del reto:  
+> 👉 [https://www.synapse.org/Synapse:syn60868042/wiki/628716](https://www.synapse.org/Synapse:syn60868042/wiki/628716)
+
+### 🧪 extra/
+Scripts y pruebas adicionales realizadas durante el desarrollo del proyecto. No forman parte del pipeline final, pero fueron relevantes en etapas intermedias.
+
+### ⚖️ fairness_analisis/
+Código completo del análisis de equidad aplicado a los modelos, evaluando su rendimiento en distintos subgrupos clínicos.
+
+### 🧾 nnUNet_preprocessed/ y nnUNet_results/
+Carpetas estructurales para reproducir los resultados de segmentación con nnU-Net v2.
+
+> ⚠️ Estas carpetas no contienen datos por limitaciones de tamaño. Para obtener los resultados completos es necesario ejecutar localmente los experimentos descritos en `Modelos_Segmentación/`.
+
+### ⚙️ normalizaciones/
+Contiene pruebas de normalización aplicadas sobre las imágenes durante la etapa de preprocesamiento.
+
 
 ---
 
